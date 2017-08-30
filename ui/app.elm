@@ -1,13 +1,11 @@
 module Main exposing (..)
 
-import Html exposing (Html, div, program, text, input, select, option)
-import Html.Attributes as H exposing (placeholder, type_, min, max)
-import Html.Events exposing (onClick, onInput)
-import DatePicker
-import Date
-import Debug
+import Html exposing (Html)
+import Html.Attributes as A
+import Html.Events as E
 import Http
-import Json.Decode as J exposing (list, string)
+import Json.Encode as Encode
+import Json.Decode as Decode
 
 
 main =
@@ -19,34 +17,23 @@ main =
         }
 
 
+init : ( Model, Cmd msg )
+init =
+    ( Model "" "" "" "" "" "", Cmd.none )
+
+
 
 -- MODEL
 
 
 type alias Model =
-    { datePicker : DatePicker.DatePicker
-    , selectedDate : Maybe Date.Date
-
-    -- , minTime : String
-    -- , maxTime : String
+    { selectedDate : String
+    , minTime : String
+    , maxTime : String
     , minPrice : String
     , maxPrice : String
-    , origin : Origin
+    , origin : String
     }
-
-
-type Origin
-    = Paris
-    | London
-
-
-init : ( Model, Cmd Msg )
-init =
-    let
-        ( datePickerInit, datePickerCmd ) =
-            DatePicker.init
-    in
-        ( Model datePickerInit Nothing "" "" Paris, Cmd.map SetDatePicker datePickerCmd )
 
 
 
@@ -55,10 +42,13 @@ init =
 
 type Msg
     = Submit
-    | SetDatePicker DatePicker.Msg
+    | SelectedDate String
     | MinPrice String
     | MaxPrice String
-    | PostResponse (Result Http.Error String)
+    | MinTime String
+    | MaxTime String
+    | SelectedOrigin String
+    | RequestRes (Result Http.Error String)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,41 +57,52 @@ update msg model =
         Submit ->
             ( model, submit model )
 
-        SetDatePicker datePickerMsg ->
-            let
-                ( newDatePicker, datePickerCmd, dateEvent ) =
-                    DatePicker.update DatePicker.defaultSettings datePickerMsg model.datePicker
-
-                date =
-                    case dateEvent of
-                        DatePicker.NoChange ->
-                            model.selectedDate
-
-                        DatePicker.Changed newDate ->
-                            newDate
-            in
-                ( { model
-                    | selectedDate = date
-                    , datePicker = newDatePicker
-                  }
-                , Cmd.map SetDatePicker datePickerCmd
-                )
-
         MinPrice minPrice ->
             ( { model | minPrice = minPrice }, Cmd.none )
 
         MaxPrice maxPrice ->
             ( { model | maxPrice = maxPrice }, Cmd.none )
 
-        PostResponse (Ok response) ->
+        MinTime minTime ->
+            ( { model | minTime = minTime }, Cmd.none )
+
+        MaxTime maxTime ->
+            ( { model | maxTime = maxTime }, Cmd.none )
+
+        SelectedDate selectedDate ->
+            ( { model | selectedDate = selectedDate }, Cmd.none )
+
+        SelectedOrigin origin ->
+            ( { model | origin = origin }, Cmd.none )
+
+        RequestRes (Ok res) ->
             ( model, Cmd.none )
 
-        PostResponse (Err _) ->
+        RequestRes (Err _) ->
             ( model, Cmd.none )
 
 
+submit : Model -> Cmd Msg
 submit model =
-    Http.send PostResponse (Http.post "http://localhost:3000" Http.emptyBody J.string)
+    Http.send RequestRes <| postRequest model
+
+
+postRequest : Model -> Http.Request String
+postRequest model =
+    Http.post "http://localhost:3000" (encodeModel model) Decode.string
+
+
+encodeModel : Model -> Http.Body
+encodeModel model =
+    Http.jsonBody <|
+        Encode.object
+            [ ( "minPrice", Encode.string model.minPrice )
+            , ( "maxPrice", Encode.string model.maxPrice )
+            , ( "selectedDate", Encode.string model.selectedDate )
+            , ( "minTime", Encode.string model.minTime )
+            , ( "maxTime", Encode.string model.maxTime )
+            , ( "origin", Encode.string model.origin )
+            ]
 
 
 
@@ -119,15 +120,12 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div []
-            [ input [ H.placeholder "Min Price", onInput MinPrice ] [] ]
-        , div []
-            [ input [ H.placeholder "Max Price", onInput MaxPrice ] [] ]
-        , div []
-            [ text "Origin: ", select [] [ option [] [ text "Paris" ], option [] [ text "London" ] ] ]
-        , div []
-            [ Html.map SetDatePicker (DatePicker.view model.selectedDate DatePicker.defaultSettings model.datePicker) ]
-        , div []
-            [ Html.button [ onClick Submit ] [ text "Submit" ] ]
+    Html.div []
+        [ Html.div [] [ Html.text "Origin: ", Html.select [ E.onInput SelectedOrigin ] [ Html.option [] [ Html.text "Paris" ], Html.option [] [ Html.text "London" ] ] ]
+        , Html.div [] [ Html.text "Departure Date: ", Html.input [ A.type_ "date", E.onInput SelectedDate ] [] ]
+        , Html.div [] [ Html.text "Min Departure Time: ", Html.input [ A.type_ "time", E.onInput MinTime ] [] ]
+        , Html.div [] [ Html.text "Max Departure Time: ", Html.input [ A.type_ "time", E.onInput MaxTime ] [] ]
+        , Html.div [] [ Html.text "Min Price: ", Html.input [ A.type_ "number", E.onInput MinPrice ] [] ]
+        , Html.div [] [ Html.text "Max Price: ", Html.input [ A.type_ "number", E.onInput MaxPrice ] [] ]
+        , Html.div [] [ Html.button [ E.onClick Submit ] [ Html.text "Submit" ] ]
         ]
