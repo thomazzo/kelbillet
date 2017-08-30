@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const path = require('path')
 const app = express()
 // Add headers
 app.use((req, res, next) => {
@@ -22,10 +23,9 @@ app.use((req, res, next) => {
 })
 
 app.use(bodyParser.json())
-app.use(express.static('../../dist/'))
 
 app.get('/', (req, res) => {
-    res.sendFile('index.html')
+    res.sendFile('index.html', { root: path.join(__dirname, '..','..', 'dist') })
 })
 
 app.post('/', (req, res)=> {
