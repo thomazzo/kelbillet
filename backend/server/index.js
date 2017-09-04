@@ -1,7 +1,10 @@
-const express = require('express')
+const app = require('express')()
+const server = require('http').createServer(app)
+const io = require('socket.io')(server)
+
 const bodyParser = require('body-parser')
 const path = require('path')
-const app = express()
+
 // Add headers
 app.use((req, res, next) => {
 
@@ -33,6 +36,8 @@ app.post('/', (req, res)=> {
     console.log(req.body)
 })
 
-app.listen(3000, () => {
-    console.log('Example app listening on port 3000!')
+io.on('connection', () => { console.log('connected to socket') })
+
+server.listen(3000, () => {
+    console.log('App listening on port 3000! woooowowow')
 })

@@ -1,9 +1,12 @@
 version: '2'
 services:
-  web:
+  app:
     build: .
     ports:
-     - "3000:3000"
+      - "3000:3000"
+    volumes:
+      - ./backend:/backend
+      - ./dist:/dist
   redis:
     image: "redis:4"
   postgres:

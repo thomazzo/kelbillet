@@ -3,10 +3,10 @@ FROM node:8
 RUN npm install --unsafe-perm -g elm
 
 COPY backend/ backend/
-COPY ui/ ui/
+COPY dist/ dist/
+
 COPY Makefile Makefile
-RUN mkdir dist/
+RUN make install
 
-RUN make install && make build
-
-CMD ["node", "backend/server/index.js"]
+WORKDIR backend/
+CMD ["./node_modules/nodemon/bin/nodemon.js","./server/index.js"]

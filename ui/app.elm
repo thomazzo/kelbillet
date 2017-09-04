@@ -6,6 +6,7 @@ import Html.Events as E
 import Http
 import Json.Encode as Encode
 import Json.Decode as Decode
+import WebSocket
 
 
 main =
@@ -49,6 +50,7 @@ type Msg
     | MaxTime String
     | SelectedOrigin String
     | RequestRes (Result Http.Error String)
+    | Receive String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -81,6 +83,9 @@ update msg model =
         RequestRes (Err _) ->
             ( model, Cmd.none )
 
+        Receive a ->
+            ( model, Cmd.none )
+
 
 submit : Model -> Cmd Msg
 submit model =
@@ -111,7 +116,7 @@ encodeModel model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    WebSocket.listen "ws://localhost:3000" Receive
 
 
 
