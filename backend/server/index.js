@@ -1,9 +1,10 @@
 const app = require('express')()
 const server = require('http').createServer(app)
-const io = require('socket.io')(server)
+const WebSocket = require('ws')
 
 const bodyParser = require('body-parser')
 const path = require('path')
+const wss = new WebSocket.Server({ server })
 
 // Add headers
 app.use((req, res, next) => {
@@ -36,7 +37,7 @@ app.post('/', (req, res)=> {
     console.log(req.body)
 })
 
-io.on('connection', () => { console.log('connected to socket') })
+wss.on('connection', () => { console.log('connected to socket') })
 
 server.listen(3000, () => {
     console.log('App listening on port 3000! woooowowow')
