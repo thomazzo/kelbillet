@@ -20,7 +20,7 @@ main =
 
 init : ( Model, Cmd msg )
 init =
-    ( Model "" "" "" "" "" "", Cmd.none )
+    ( Model "" "" "" "" "" "Paris", Cmd.none )
 
 
 
@@ -94,7 +94,7 @@ submit model =
 
 postRequest : Model -> Http.Request String
 postRequest model =
-    Http.post "ws://localhost:3000" (encodeModel model) Decode.string
+    Http.post "http://localhost:3000" (encodeModel model) Decode.string
 
 
 encodeModel : Model -> Http.Body
@@ -126,7 +126,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ Html.div [] [ Html.text "Origin22: ", Html.select [ E.onInput SelectedOrigin ] [ Html.option [] [ Html.text "Paris" ], Html.option [] [ Html.text "London" ] ] ]
+        [ Html.div [] [ Html.text "Origin: ", Html.select [ E.onInput SelectedOrigin ] [ Html.option [] [ Html.text "Paris" ], Html.option [] [ Html.text "London" ] ] ]
         , Html.div [] [ Html.text "Departure Date: ", Html.input [ A.type_ "date", E.onInput SelectedDate ] [] ]
         , Html.div [] [ Html.text "Min Departure Time: ", Html.input [ A.type_ "time", E.onInput MinTime ] [] ]
         , Html.div [] [ Html.text "Max Departure Time: ", Html.input [ A.type_ "time", E.onInput MaxTime ] [] ]
