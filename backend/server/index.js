@@ -33,9 +33,10 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', { root: path.join(__dirname, '..','..', 'dist') })
 })
 
-app.post('/', (req, res)=> {
+app.post('/', async (req, res)=> {
     res.send('Got a POST request')
-    scraper.processScrapeRequest(req.body)
+    const a = await scraper.processScrapeRequest(req.body)
+    console.log(a)
 })
 
 wss.on('connection', () => { console.log('connected to socket') })

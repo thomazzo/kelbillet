@@ -1,9 +1,9 @@
-const request = require('request')
+const request = require('request-promise')
 const cheerio = require('cheerio')
 
-function scrapePage(url){
-    return request.get(url, (err, res, body) =>  {
-        parsePage(body)})
+async function scrapePage(url){
+    const body = await request.get(url)
+    return parsePage(body)
 }
 
 function parsePage(pageBody) {
