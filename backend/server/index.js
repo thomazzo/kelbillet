@@ -4,6 +4,7 @@ const WebSocket = require('ws')
 const bodyParser = require('body-parser')
 const path = require('path')
 const scraper = require('../scraper')
+const db = require('../db')
 
 const wss = new WebSocket.Server({ server })
 
@@ -35,8 +36,8 @@ app.get('/', (req, res) => {
 
 app.post('/', async (req, res)=> {
     res.send('Got a POST request')
-    const a = await scraper.processScrapeRequest(req.body)
-    console.log(a)
+    const tickets = await scraper.processScrapeRequest(req.body)
+    db.saveTickets(tickets)
 })
 
 wss.on('connection', () => { console.log('connected to socket') })

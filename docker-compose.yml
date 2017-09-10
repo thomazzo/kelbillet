@@ -4,6 +4,10 @@ services:
     build:
         context: .
         dockerfile: Dockerfile-app
+    environment:
+        - PGUSER=postgres
+        - PGDATABASE=kelbillet
+        - PGHOST=postgres
     ports:
       - "3000:3000"
     volumes:
