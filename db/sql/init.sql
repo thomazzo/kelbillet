@@ -13,6 +13,6 @@ CREATE TABLE tickets (
     departure_time TIME,
     arrival_date DATE,
     arrival_time TIME,
-    url VARCHAR,
+    url VARCHAR UNIQUE,
     ts TIMESTAMP
   );
