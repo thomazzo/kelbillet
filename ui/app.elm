@@ -20,7 +20,7 @@ main =
 
 init : ( Model, Cmd msg )
 init =
-    ( Model "" "" "" "" "" "Paris", Cmd.none )
+    ( Model "" "" "" "" "" "Paris-London", Cmd.none )
 
 
 
@@ -33,7 +33,7 @@ type alias Model =
     , maxTime : String
     , minPrice : String
     , maxPrice : String
-    , origin : String
+    , route : String
     }
 
 
@@ -48,7 +48,7 @@ type Msg
     | MaxPrice String
     | MinTime String
     | MaxTime String
-    | SelectedOrigin String
+    | SelectedRoute String
     | RequestRes (Result Http.Error String)
     | Receive String
 
@@ -74,8 +74,8 @@ update msg model =
         SelectedDate selectedDate ->
             ( { model | selectedDate = selectedDate }, Cmd.none )
 
-        SelectedOrigin origin ->
-            ( { model | origin = origin }, Cmd.none )
+        SelectedRoute route ->
+            ( { model | route = route }, Cmd.none )
 
         RequestRes (Ok res) ->
             ( model, Cmd.none )
@@ -106,7 +106,7 @@ encodeModel model =
             , ( "selectedDate", Encode.string model.selectedDate )
             , ( "minTime", Encode.string model.minTime )
             , ( "maxTime", Encode.string model.maxTime )
-            , ( "origin", Encode.string model.origin )
+            , ( "route", Encode.string model.route )
             ]
 
 
@@ -126,7 +126,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     Html.div []
-        [ Html.div [] [ Html.text "Origin: ", Html.select [ E.onInput SelectedOrigin ] [ Html.option [] [ Html.text "Paris" ], Html.option [] [ Html.text "London" ] ] ]
+        [ Html.div [] [ Html.text "Route: ", Html.select [ E.onInput SelectedRoute ] [ Html.option [] [ Html.text "Paris-London" ], Html.option [] [ Html.text "London-Paris" ] ] ]
         , Html.div [] [ Html.text "Departure Date: ", Html.input [ A.type_ "date", E.onInput SelectedDate ] [] ]
         , Html.div [] [ Html.text "Min Departure Time: ", Html.input [ A.type_ "time", E.onInput MinTime ] [] ]
         , Html.div [] [ Html.text "Max Departure Time: ", Html.input [ A.type_ "time", E.onInput MaxTime ] [] ]

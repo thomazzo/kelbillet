@@ -34,8 +34,8 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', async (req, res)=> {
-    res.send('Got a POST request')
-    scraper.processScrapeRequest(req.body)
+    const tickets = await scraper.processScrapeRequest(req.body)
+    res.send(tickets)
 })
 
 wss.on('connection', () => { console.log('connected to socket') })
