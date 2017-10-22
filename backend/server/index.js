@@ -38,7 +38,10 @@ app.post('/', (req, res)=> {
     res.send('Jobs Queued')
 })
 
-wss.on('connection', () => { console.log('connected to socket') })
+wss.on('connection', function(ws){
+    console.log('connected to socket')
+    ws.send('connected to socket')
+})
 
 server.listen(3000, () => {
     console.log('App listening on port 3000!')

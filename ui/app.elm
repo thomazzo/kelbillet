@@ -7,6 +7,7 @@ import Http
 import Json.Encode as Encode
 import Json.Decode as Decode
 import WebSocket
+import Debug
 
 
 main =
@@ -84,7 +85,11 @@ update msg model =
             ( model, Cmd.none )
 
         Receive a ->
-            ( model, Cmd.none )
+            let
+                b =
+                    Debug.log a a
+            in
+                ( model, Cmd.none )
 
 
 submit : Model -> Cmd Msg

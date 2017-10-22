@@ -27,7 +27,10 @@ function queueScrapeJobs(reqBody, wss) {
     )
     job.on('complete', function(res) {
         console.log('complete', res)
-        wss.send(res)
+        wss.on(
+            'connection',
+            (ws) => ws.send('aaaa', (err) => console.log(err))
+        )
     })
     job.save()
 }
