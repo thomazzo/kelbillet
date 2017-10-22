@@ -3,7 +3,7 @@ const server = require('http').createServer(app)
 const WebSocket = require('ws')
 const bodyParser = require('body-parser')
 const path = require('path')
-const scraper = require('../scraper')
+const queue = require('../queue')
 
 const wss = new WebSocket.Server({ server })
 
@@ -33,9 +33,9 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', { root: path.join(__dirname, '..','..', 'dist') })
 })
 
-app.post('/', async (req, res)=> {
-    const tickets = await scraper.processScrapeRequest(req.body)
-    res.send(tickets)
+app.post('/', (req, res)=> {
+    queue.queueScrapeJobs(req.body, wss)
+    res.send('Jobs Queued')
 })
 
 wss.on('connection', () => { console.log('connected to socket') })
