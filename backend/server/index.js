@@ -3,27 +3,35 @@ const server = require('http').createServer(app)
 const WebSocket = require('ws')
 const bodyParser = require('body-parser')
 const path = require('path')
-const queue = require('../queue')
+
+const scraper = require('../scraper')
+
+const kue = require('kue')
+const queue = kue.createQueue(
+    {
+        redis:{
+            port:6379,
+            host:'redis'
+        }
+    }
+)
+
+queue.on( 'error', function( err ) {
+    console.log( 'Queue Error: ', err )
+})
+
+queue.process('scrape', (job, done) => {
+    scraper.processScrapeRequest(job.data.reqBody).then(
+        (tickets) => done(null, tickets) 
+    )
+})
 
 const wss = new WebSocket.Server({ server })
 
-// Add headers
 app.use((req, res, next) => {
-
-    // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
-
-    // Request methods you wish to allow
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE')
-
-    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST')
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type')
-
-    // Set to true if you need the website to include cookies in the requests sent
-    // to the API (e.g. in case you use sessions)
-    res.setHeader('Access-Control-Allow-Credentials', true)
-
-    // Pass to next layer of middleware
     next()
 })
 
@@ -34,13 +42,25 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', (req, res)=> {
-    queue.queueScrapeJobs(req.body, wss)
+    let job = queue.create(
+        'scrape',
+        {
+            'reqBody': req.body
+        }
+    )
+    job.save()
     res.send('Jobs Queued')
 })
 
 wss.on('connection', function(ws){
     console.log('connected to socket')
     ws.send('connected to socket')
+    queue.on('job complete',
+        (id, res) => {
+            ws.send(res)
+            console.log(res)
+        }
+    )
 })
 
 server.listen(3000, () => {
