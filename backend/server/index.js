@@ -42,13 +42,15 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', (req, res)=> {
-    let job = queue.create(
-        'scrape',
-        {
-            'reqBody': req.body
-        }
-    )
-    job.save()
+    for(let t of [0, 5000, 10000]){
+        let job = queue.create(
+            'scrape',
+            {
+                'reqBody': req.body
+            }
+        )
+        job.delay(t).save()
+    }
     res.send('Jobs Queued')
 })
 
@@ -57,8 +59,7 @@ wss.on('connection', function(ws){
     ws.send('connected to socket')
     queue.on('job complete',
         (id, res) => {
-            ws.send(res)
-            console.log(res)
+            ws.send(JSON.stringify(res))
         }
     )
 })

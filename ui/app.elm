@@ -5,9 +5,9 @@ import Html.Attributes as A
 import Html.Events as E
 import Http
 import Json.Encode as Encode
-import Json.Decode as Decode
+import Json.Decode as D
 import WebSocket
-import Debug
+import List exposing (map)
 
 
 main =
@@ -21,7 +21,7 @@ main =
 
 init : ( Model, Cmd msg )
 init =
-    ( Model "" "" "" "" "" "Paris-London", Cmd.none )
+    ( Model "" "" "" "" "" "Paris-London" [], Cmd.none )
 
 
 
@@ -35,6 +35,17 @@ type alias Model =
     , minPrice : String
     , maxPrice : String
     , route : String
+    , tickets : List Ticket
+    }
+
+
+type alias Ticket =
+    { price : String
+    , userName : String
+    , postDate : String
+    , departure : String
+    , arrival : String
+    , link : String
     }
 
 
@@ -84,12 +95,8 @@ update msg model =
         RequestRes (Err _) ->
             ( model, Cmd.none )
 
-        Receive a ->
-            let
-                b =
-                    Debug.log a a
-            in
-                ( model, Cmd.none )
+        Receive newTickets ->
+            ( { model | tickets = parseTickets newTickets }, Cmd.none )
 
 
 submit : Model -> Cmd Msg
@@ -99,7 +106,7 @@ submit model =
 
 postRequest : Model -> Http.Request String
 postRequest model =
-    Http.post "http://localhost:3000" (encodeModel model) Decode.string
+    Http.post "http://localhost:3000" (encodeModel model) D.string
 
 
 encodeModel : Model -> Http.Body
@@ -113,6 +120,21 @@ encodeModel model =
             , ( "maxTime", Encode.string model.maxTime )
             , ( "route", Encode.string model.route )
             ]
+
+
+parseTickets : String -> List Ticket
+parseTickets newTickets =
+    case D.decodeString (D.list ticketDecoder) newTickets of
+        Ok tickets ->
+            tickets
+
+        Err _ ->
+            []
+
+
+ticketDecoder : D.Decoder Ticket
+ticketDecoder =
+    D.map6 Ticket (D.field "price" D.string) (D.field "userName" D.string) (D.field "postDate" D.string) (D.field "departure" D.string) (D.field "arrival" D.string) (D.field "link" D.string)
 
 
 
@@ -138,4 +160,20 @@ view model =
         , Html.div [] [ Html.text "Min Price: ", Html.input [ A.type_ "number", E.onInput MinPrice ] [] ]
         , Html.div [] [ Html.text "Max Price: ", Html.input [ A.type_ "number", E.onInput MaxPrice ] [] ]
         , Html.div [] [ Html.button [ E.onClick Submit ] [ Html.text "Submit" ] ]
+        , Html.div [] (renderTickets model.tickets)
         ]
+
+
+renderTickets : List Ticket -> List (Html Msg)
+renderTickets tickets =
+    map ticketRow tickets
+
+
+showTicket : Ticket -> String
+showTicket t =
+    List.foldl (\ti acc -> acc ++ " " ++ ti) t.departure [ t.arrival, t.userName, t.postDate, t.price, t.link ]
+
+
+ticketRow : Ticket -> Html Msg
+ticketRow ticket =
+    Html.tr [] [ Html.text (showTicket ticket) ]
