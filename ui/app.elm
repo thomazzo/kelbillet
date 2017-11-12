@@ -8,6 +8,10 @@ import Json.Encode as Encode
 import Json.Decode as D
 import WebSocket
 import List exposing (map)
+import Material
+import Material.Table as Table
+import Material.Button as Button
+import Material.Options as Options
 
 
 main =
@@ -21,7 +25,7 @@ main =
 
 init : ( Model, Cmd msg )
 init =
-    ( Model "" "" "" "" "" "Paris-London" [], Cmd.none )
+    ( Model "" "" "" "" "" "Paris-London" [] Material.model, Cmd.none )
 
 
 
@@ -36,6 +40,7 @@ type alias Model =
     , maxPrice : String
     , route : String
     , tickets : List Ticket
+    , mdl : Material.Model
     }
 
 
@@ -63,6 +68,7 @@ type Msg
     | SelectedRoute String
     | RequestRes (Result Http.Error String)
     | Receive String
+    | Mdl (Material.Msg Msg)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -97,6 +103,10 @@ update msg model =
 
         Receive newTickets ->
             ( { model | tickets = parseTickets newTickets }, Cmd.none )
+
+        -- Boilerplate: Mdl action handler.
+        Mdl msg_ ->
+            Material.update Mdl msg_ model
 
 
 submit : Model -> Cmd Msg
@@ -150,6 +160,10 @@ subscriptions model =
 -- VIEW
 
 
+type alias Mdl =
+    Material.Model
+
+
 view : Model -> Html Msg
 view model =
     Html.div []
@@ -159,21 +173,26 @@ view model =
         , Html.div [] [ Html.text "Max Departure Time: ", Html.input [ A.type_ "time", E.onInput MaxTime ] [] ]
         , Html.div [] [ Html.text "Min Price: ", Html.input [ A.type_ "number", E.onInput MinPrice ] [] ]
         , Html.div [] [ Html.text "Max Price: ", Html.input [ A.type_ "number", E.onInput MaxPrice ] [] ]
-        , Html.div [] [ Html.button [ E.onClick Submit ] [ Html.text "Submit" ] ]
-        , Html.div [] (renderTickets model.tickets)
+        , Html.div [] [ Button.render Mdl [ 0 ] model.mdl [ Options.onClick Submit ] [ Html.text "Submit" ] ]
+        , Html.div [] [ Table.table [] (renderTickets model.tickets) ]
         ]
 
 
 renderTickets : List Ticket -> List (Html Msg)
 renderTickets tickets =
-    map ticketRow tickets
+    case tickets of
+        [] ->
+            []
 
-
-showTicket : Ticket -> String
-showTicket t =
-    List.foldl (\ti acc -> acc ++ " " ++ ti) t.departure [ t.arrival, t.userName, t.postDate, t.price, t.link ]
+        _ ->
+            [ Table.thead []
+                [ Table.tr []
+                    (map (\x -> Table.th [] [ Html.text x ]) [ "departure", "arrival", "userName", "postDate", "price", "link" ])
+                ]
+            , Table.tbody [] (map ticketRow tickets)
+            ]
 
 
 ticketRow : Ticket -> Html Msg
-ticketRow ticket =
-    Html.tr [] [ Html.text (showTicket ticket) ]
+ticketRow t =
+    Table.tr [] (List.map (\x -> Table.td [] [ Html.text x ]) [ t.departure, t.arrival, t.userName, t.postDate, t.price, t.link ])

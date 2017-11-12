@@ -1,3 +1,4 @@
+const express = require('express')
 const app = require('express')()
 const server = require('http').createServer(app)
 const WebSocket = require('ws')
@@ -37,9 +38,9 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json())
 
-app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: path.join(__dirname, '..','..', 'dist') })
-})
+
+app.use('/', express.static(path.join(__dirname, '..','..', 'dist')))
+
 
 app.post('/', (req, res)=> {
     for(let t of [0, 5000, 10000]){
